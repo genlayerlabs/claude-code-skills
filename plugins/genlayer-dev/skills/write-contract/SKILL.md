@@ -19,7 +19,7 @@ Always lint with `genvm-lint check` after writing or modifying a contract.
 ## Contract Skeleton
 
 ```python
-# { "Depends": "py-genlayer:test" }
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 from genlayer import *
 
@@ -42,6 +42,40 @@ class MyContract(gl.Contract):
             raise gl.UserError("Only owner")
         self.items[item_id] = Item(value=value)
         self.item_order.append(item_id)
+```
+
+## Runner Dependencies
+
+The first line of a contract declares the GenVM Python runner. Always pin a
+specific runner hash. Do not use `test`, `latest`, or an unversioned runner
+alias in generated contracts.
+
+### Single-file Python contracts
+
+```python
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+```
+
+### Multi-file Python contract packages
+
+Use `py-genlayer-multi` when the contract is packaged across multiple files.
+
+```python
+# { "Depends": "py-genlayer-multi:06zyvrlivjga0d5jlpdbprksc0pa6jmllxvp8s20hq1l512vh5yk" }
+```
+
+### Contracts using embeddings or semantic search
+
+Add `py-lib-genlayer-embeddings` before the main Python runner with a `Seq`
+block.
+
+```python
+# {
+#   "Seq": [
+#     { "Depends": "py-lib-genlayer-embeddings:0bmbm3cyfwxsyh454z53vxqjf47wz2q7smcqp1q4g4a6k2kidnyk" },
+#     { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+#   ]
+# }
 ```
 
 ## Equivalence Principle — Which One to Use
