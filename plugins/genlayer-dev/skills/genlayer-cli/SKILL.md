@@ -125,15 +125,41 @@ genlayer receipt <txHash>
 genlayer receipt <txHash> --stdout
 genlayer receipt <txHash> --stderr
 
-# Wait for specific status
+# Wait for a lifecycle status
 genlayer receipt <txHash> --status PENDING
+genlayer receipt <txHash> --status ACCEPTED
 genlayer receipt <txHash> --status FINALIZED
 
 # Custom retry behavior
 genlayer receipt <txHash> --retries 50 --interval 3000
 ```
 
-Transaction statuses: `SUBMITTED` → `PENDING` → `FINALIZED`
+Transaction lifecycle statuses: `SUBMITTED` -> `PENDING` -> `ACCEPTED` -> `FINALIZED`
+
+### Lifecycle status is not execution success
+
+`ACCEPTED` and `FINALIZED` mean the network accepted or finalized the transaction
+outcome. They do not mean the contract code executed successfully.
+
+If contract execution fails, the transaction can still become `ACCEPTED` and
+later `FINALIZED`, but state changes are not applied. For deploy transactions,
+that means no contract is created. In that case, `genlayer code`,
+`genlayer schema`, `eth_getCode`, or `gen_getContractSchema` returning no
+contract is expected.
+
+Always inspect the receipt execution result before diagnosing infrastructure:
+
+1. Run `genlayer receipt <txHash> --stdout --stderr`.
+2. Check whether execution succeeded or failed.
+3. If execution failed, fix the contract/runtime error first.
+4. Treat missing code/schema as a possible RPC, indexer, or state-read issue only
+   when the receipt shows execution success.
+
+| Observation | Likely meaning |
+|-------------|----------------|
+| `ACCEPTED`/`FINALIZED` + execution error + no code/schema | Expected failed deploy; fix the contract or runtime error |
+| `ACCEPTED`/`FINALIZED` + execution success + no code/schema | Possible RPC, indexer, or state-read issue |
+| `PENDING`, missing receipt, or transaction not found | Polling, network, or transaction propagation issue |
 
 ## Appeal a Transaction
 
@@ -169,10 +195,11 @@ genlayer localnet validators delete --address 0x...       # Remove
 When a transaction fails or produces unexpected results:
 
 1. **Get the receipt**: `genlayer receipt <txHash> --stdout --stderr`
-2. **Check contract schema**: `genlayer schema <address>` (verify method exists, correct args)
-3. **Read contract source**: `genlayer code <address>` (verify deployed code matches local)
-4. **Try a read call**: `genlayer call <address> <view_method>` (check current state)
-5. **Appeal if needed**: `genlayer appeal <txHash>` (re-run consensus)
+2. **Check execution result**: lifecycle status alone is not enough; `ACCEPTED`/`FINALIZED` can contain execution errors
+3. **Check contract schema**: `genlayer schema <address>` (verify method exists, correct args)
+4. **Read contract source**: `genlayer code <address>` (verify deployed code matches local)
+5. **Try a read call**: `genlayer call <address> <view_method>` (check current state)
+6. **Appeal if needed**: `genlayer appeal <txHash>` (re-run consensus)
 
 ## Project Scaffolding
 

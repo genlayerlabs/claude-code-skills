@@ -563,16 +563,34 @@ const skills = {
         {
             id: 'write-contract',
             name: 'Write Contract',
-            desc: 'Production-quality intelligent contracts with equivalence principle guidance',
+            desc: 'Production-quality intelligent contracts with pinned GenVM runner versions',
             badge: 'plugin',
             content: `## Write Contract
 
 The core skill for building GenLayer intelligent contracts — Python classes that run on GenVM with built-in AI capabilities.
 
+### Critical: Pin the Runner Version
+
+All GenLayer networks reject \`py-genlayer:test\`, \`py-genlayer:latest\`, and unversioned runner aliases. Every generated contract must start with a pinned runner dependency header:
+
+\`\`\`python
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+\`\`\`
+
+\`test\` and \`latest\` are local-development aliases for GenLayer runtime developers. They may work only in a specially configured local Studio environment with a GenLayer developer environment variable, but they do not work on GenLayer networks and must not appear in generated user contracts.
+
+Before returning any contract code, verify:
+
+- The first line is a pinned \`Depends\` runner version hash
+- There is no \`py-genlayer:test\`
+- There is no \`py-genlayer:latest\`
+- There is no unversioned \`py-genlayer\`
+
 ### What It Covers
 
+- **Runner Header** — Pinned \`py-genlayer\` version hashes are mandatory for GenLayer networks
 - **Equivalence Principle** — The critical decision: \`strict_eq\` for deterministic calls, custom validator functions for LLM/web operations
-- **Runner Dependencies** — Pin \`py-genlayer\` hashes instead of using \`test\`, \`latest\`, or unversioned aliases
+- **Runner Dependencies** — Pin \`py-genlayer\` version hashes instead of using \`test\`, \`latest\`, or unversioned aliases
 - **Storage Rules** — \`TreeMap\` instead of dict, \`DynArray\` instead of list, \`u256\` for money
 - **LLM Resilience** — Defensive parsing, key variation handling, aggressive coercion, JSON response format
 - **Cross-Contract Calls** — Synchronous reads, async writes with \`emit()\`, factory patterns
@@ -605,7 +623,7 @@ class MyContract:
 
 ### Runner Dependencies
 
-Always pin a specific runner hash in the contract's first line. Do not use \`test\`, \`latest\`, or an unversioned runner alias.
+Always pin a specific runner version hash in the contract's first line. All GenLayer networks reject \`test\`, \`latest\`, and unversioned runner aliases.
 
 | Contract Type | Dependency |
 |---------------|------------|
@@ -615,7 +633,7 @@ Always pin a specific runner hash in the contract's first line. Do not use \`tes
 
 ### Anti-Patterns
 
-- \`test\`, \`latest\`, or unversioned runner dependencies — pin the documented runner hash
+- \`py-genlayer:test\`, \`py-genlayer:latest\`, or unversioned \`py-genlayer\` — All GenLayer networks reject runner aliases; pin the documented runner version hash
 - \`strict_eq()\` for LLM calls — LLM outputs are non-deterministic
 - \`dict\` / \`list\` for storage — use \`TreeMap\` / \`DynArray\`
 - \`float\` for money — use atto-scale \`u256\`
@@ -750,6 +768,12 @@ def test_full_flow():
     assert result == "hello"
 \`\`\`
 
+### Lifecycle vs Execution
+
+\`ACCEPTED\` and \`FINALIZED\` are transaction lifecycle states, not proof that contract execution succeeded. A transaction can be accepted and finalized with an execution error, and failed execution applies no state changes. For deploy transactions, failed execution means no contract is created.
+
+Always assert \`tx_execution_succeeded(receipt)\` before reading state, checking schema/code, or treating a missing contract as an infrastructure issue.
+
 ### Direct vs Integration
 
 | Aspect | Direct | Integration |
@@ -813,11 +837,16 @@ Networks: \`localnet\`, \`testnet-asimov\`, \`testnet-bradbury\`, \`mainnet\`
 
 \`\`\`
 1. Get receipt:  genlayer receipt <txHash> --stdout --stderr
-2. Check schema: genlayer schema <address>
-3. Read source:  genlayer code <address>
-4. Try read:     genlayer call <address> <view_method>
-5. Appeal:       genlayer appeal <txHash>
+2. Check execution result; ACCEPTED/FINALIZED can still contain execution errors
+3. Check schema: genlayer schema <address>
+4. Read source:  genlayer code <address>
+5. Try read:     genlayer call <address> <view_method>
+6. Appeal:       genlayer appeal <txHash>
 \`\`\`
+
+### Lifecycle vs Execution
+
+\`ACCEPTED\` and \`FINALIZED\` mean the network accepted or finalized the transaction outcome. They do not mean contract code executed successfully. If deploy execution fails, no contract is created, so missing code/schema is expected until the receipt shows execution success.
 
 ### Account Management
 
