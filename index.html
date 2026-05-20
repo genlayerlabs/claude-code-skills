@@ -563,14 +563,30 @@ const skills = {
         {
             id: 'write-contract',
             name: 'Write Contract',
-            desc: 'Production-quality intelligent contracts with equivalence principle guidance',
+            desc: 'Production-quality intelligent contracts with StudioNet-safe pinned runner hashes',
             badge: 'plugin',
             content: `## Write Contract
 
 The core skill for building GenLayer intelligent contracts — Python classes that run on GenVM with built-in AI capabilities.
 
+### Critical: Runner Header Required
+
+StudioNet rejects \`py-genlayer:test\`, \`py-genlayer:latest\`, and unversioned runner aliases. Every generated contract must start with a pinned runner dependency header:
+
+\`\`\`python
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+\`\`\`
+
+Before returning any contract code, verify:
+
+- The first line is a pinned \`Depends\` runner hash
+- There is no \`py-genlayer:test\`
+- There is no \`py-genlayer:latest\`
+- There is no unversioned \`py-genlayer\`
+
 ### What It Covers
 
+- **Runner Header** — StudioNet-safe pinned \`py-genlayer\` hashes are mandatory
 - **Equivalence Principle** — The critical decision: \`strict_eq\` for deterministic calls, custom validator functions for LLM/web operations
 - **Runner Dependencies** — Pin \`py-genlayer\` hashes instead of using \`test\`, \`latest\`, or unversioned aliases
 - **Storage Rules** — \`TreeMap\` instead of dict, \`DynArray\` instead of list, \`u256\` for money
@@ -605,7 +621,7 @@ class MyContract:
 
 ### Runner Dependencies
 
-Always pin a specific runner hash in the contract's first line. Do not use \`test\`, \`latest\`, or an unversioned runner alias.
+Always pin a specific runner hash in the contract's first line. StudioNet rejects \`test\`, \`latest\`, and unversioned runner aliases.
 
 | Contract Type | Dependency |
 |---------------|------------|
@@ -615,7 +631,7 @@ Always pin a specific runner hash in the contract's first line. Do not use \`tes
 
 ### Anti-Patterns
 
-- \`test\`, \`latest\`, or unversioned runner dependencies — pin the documented runner hash
+- \`py-genlayer:test\`, \`py-genlayer:latest\`, or unversioned \`py-genlayer\` — StudioNet rejects runner aliases; pin the documented runner hash
 - \`strict_eq()\` for LLM calls — LLM outputs are non-deterministic
 - \`dict\` / \`list\` for storage — use \`TreeMap\` / \`DynArray\`
 - \`float\` for money — use atto-scale \`u256\`

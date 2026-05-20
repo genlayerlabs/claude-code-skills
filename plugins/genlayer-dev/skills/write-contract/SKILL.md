@@ -1,6 +1,6 @@
 ---
 name: write-contract
-description: Write production-quality GenLayer intelligent contracts. Covers equivalence principle selection, validator patterns, storage rules, LLM resilience, and cross-contract interaction.
+description: Write production-quality GenLayer intelligent contracts. Always pins StudioNet-safe GenVM runner hashes and never uses test/latest runner aliases. Covers equivalence principles, storage rules, LLM resilience, and cross-contract interaction.
 allowed-tools:
   - Bash
   - Read
@@ -13,6 +13,23 @@ allowed-tools:
 # Write Intelligent Contract
 
 Guidance for writing GenLayer intelligent contracts that pass consensus, handle errors correctly, and survive production.
+
+## Critical: Runner Header Required
+
+StudioNet rejects `py-genlayer:test`, `py-genlayer:latest`, and unversioned
+runner aliases. Every generated contract MUST start with a pinned runner
+dependency header.
+
+```python
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+```
+
+Before returning any contract code, verify:
+
+- The first line is a pinned `Depends` runner hash.
+- There is no `py-genlayer:test`.
+- There is no `py-genlayer:latest`.
+- There is no unversioned `py-genlayer`.
 
 Always lint with `genvm-lint check` after writing or modifying a contract.
 
@@ -47,8 +64,8 @@ class MyContract(gl.Contract):
 ## Runner Dependencies
 
 The first line of a contract declares the GenVM Python runner. Always pin a
-specific runner hash. Do not use `test`, `latest`, or an unversioned runner
-alias in generated contracts.
+specific runner hash. StudioNet rejects `test`, `latest`, and unversioned runner
+aliases in generated contracts.
 
 ### Single-file Python contracts
 
@@ -471,6 +488,7 @@ def validator_fn(leaders_res: gl.vm.Result) -> bool:
 
 | Don't | Do Instead | Why |
 |-------|-----------|-----|
+| `py-genlayer:test`, `py-genlayer:latest`, or unversioned `py-genlayer` | Pin the documented runner hash | StudioNet rejects runner aliases and unpinned dependencies |
 | `strict_eq()` for LLM calls | Custom validator function | LLM outputs are non-deterministic — strict_eq always fails consensus |
 | Store `list` or `dict` | `DynArray[T]` or `TreeMap[K, V]` | Python builtins aren't persistable |
 | Use native `float` for money | Atto-scale `u256` (value * 10^18) | Standard across blockchains for cross-chain interop |

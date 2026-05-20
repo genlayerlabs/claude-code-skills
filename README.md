@@ -17,7 +17,7 @@ A [Claude Code](https://claude.ai/code) plugin marketplace providing skills for 
 
 | Plugin | Description |
 |--------|-------------|
-| `genlayer-dev` | Development skills for intelligent contracts — linting, direct mode tests, and integration tests. |
+| `genlayer-dev` | Development skills for intelligent contracts — StudioNet-safe pinned runner hashes, linting, direct mode tests, and integration tests. |
 | `genlayernode` | Interactive wizard to set up a GenLayer validator node on Linux. |
 
 ## Usage
@@ -28,6 +28,7 @@ After installing a plugin, invoke its skills:
 
 | Skill | Description |
 |-------|-------------|
+| `write-contract` | Write contracts with StudioNet-safe pinned runner headers and production patterns |
 | `genvm-lint` | Validate contracts with the GenVM linter |
 | `direct-tests` | Write and run fast in-memory direct mode tests |
 | `integration-tests` | Write and run integration tests against GenLayer environments |
