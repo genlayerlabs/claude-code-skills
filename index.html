@@ -768,6 +768,12 @@ def test_full_flow():
     assert result == "hello"
 \`\`\`
 
+### Lifecycle vs Execution
+
+\`ACCEPTED\` and \`FINALIZED\` are transaction lifecycle states, not proof that contract execution succeeded. A transaction can be accepted and finalized with an execution error, and failed execution applies no state changes. For deploy transactions, failed execution means no contract is created.
+
+Always assert \`tx_execution_succeeded(receipt)\` before reading state, checking schema/code, or treating a missing contract as an infrastructure issue.
+
 ### Direct vs Integration
 
 | Aspect | Direct | Integration |
@@ -831,11 +837,16 @@ Networks: \`localnet\`, \`testnet-asimov\`, \`testnet-bradbury\`, \`mainnet\`
 
 \`\`\`
 1. Get receipt:  genlayer receipt <txHash> --stdout --stderr
-2. Check schema: genlayer schema <address>
-3. Read source:  genlayer code <address>
-4. Try read:     genlayer call <address> <view_method>
-5. Appeal:       genlayer appeal <txHash>
+2. Check execution result; ACCEPTED/FINALIZED can still contain execution errors
+3. Check schema: genlayer schema <address>
+4. Read source:  genlayer code <address>
+5. Try read:     genlayer call <address> <view_method>
+6. Appeal:       genlayer appeal <txHash>
 \`\`\`
+
+### Lifecycle vs Execution
+
+\`ACCEPTED\` and \`FINALIZED\` mean the network accepted or finalized the transaction outcome. They do not mean contract code executed successfully. If deploy execution fails, no contract is created, so missing code/schema is expected until the receipt shows execution success.
 
 ### Account Management
 

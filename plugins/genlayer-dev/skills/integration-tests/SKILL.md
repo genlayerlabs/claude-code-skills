@@ -45,6 +45,14 @@ def test_full_flow():
     assert result == "hello"
 ```
 
+`ACCEPTED` and `FINALIZED` are transaction lifecycle states, not proof that
+contract execution succeeded. A transaction can be accepted and finalized with
+an execution error, and failed execution applies no state changes. For deploy
+transactions, failed execution means no contract is created.
+
+Always assert `tx_execution_succeeded(receipt)` before reading state, checking
+schema/code, or treating a missing contract as an infrastructure issue.
+
 ## Key Differences from Direct Mode
 
 | | Direct Mode | Integration Tests |
