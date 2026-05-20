@@ -38,6 +38,32 @@ Before returning any contract code, verify:
 
 Always lint with `genvm-lint check` after writing or modifying a contract.
 
+## When to Use GenLayer
+
+Before writing code, decide whether the feature actually needs GenLayer consensus. Recent builder feedback shows many projects start by treating GenLayer as a generic AI backend; push them toward a clear on-chain consensus role.
+
+Use GenLayer when the contract must coordinate or settle around a subjective, external, or AI-mediated judgment that multiple validators should verify independently:
+
+- Dispute resolution where evidence must be evaluated and the result affects escrow, payouts, reputation, or access.
+- Prediction/oracle-style markets where the contract needs an independently validated outcome from external evidence.
+- Compliance, moderation, or scoring workflows where the final decision must be reproducible enough for validator agreement but cannot be reduced to a simple deterministic API call.
+- Autonomous agents that need transparent settlement, appeals, and auditable state transitions rather than a private off-chain decision.
+
+Prefer a normal backend, frontend, or off-chain LLM workflow when:
+
+- The frontend already computes the final answer and GenLayer would only rubber-stamp it.
+- The contract only stores user-provided data with no validator-verifiable judgment.
+- A deterministic smart contract, REST API, or database job can perform the work without AI consensus.
+- The data-fetching/prompting step is not tied to an on-chain state transition, escrow, payout, or appealable decision.
+
+For every contract, write down the boundary before implementation:
+
+- **Frontend/backend owns:** UI, user auth, indexing, non-authoritative previews, cached market data, and convenience analytics.
+- **GenLayer contract owns:** the minimum state transition that needs consensus, the evidence inputs, the validator comparison rule, the final settlement effect, and any appeal/rotation path.
+- **External sources own:** raw facts or documents; do not treat them as trusted unless validators can re-fetch, normalize, and compare them.
+
+If the boundary is unclear, create a one-page architecture note before coding: user action -> evidence source -> nondeterministic call -> equivalence principle -> state update -> user-visible settlement.
+
 ## Contract Skeleton
 
 ```python

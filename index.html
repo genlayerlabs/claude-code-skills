@@ -588,6 +588,7 @@ Before returning any contract code, verify:
 
 ### What It Covers
 
+- **Architecture Fit** — Decide whether GenLayer should own the consensus/settlement step or whether the work belongs in a frontend/backend/off-chain LLM
 - **Runner Header** — Pinned \`py-genlayer\` version hashes are mandatory for GenLayer networks
 - **Equivalence Principle** — The critical decision: \`strict_eq\` for deterministic calls, custom validator functions for LLM/web operations
 - **Runner Dependencies** — Pin \`py-genlayer\` version hashes instead of using \`test\`, \`latest\`, or unversioned aliases

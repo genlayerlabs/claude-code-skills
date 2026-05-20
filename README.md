@@ -28,7 +28,8 @@ After installing a plugin, invoke its skills:
 
 | Skill | Description |
 |-------|-------------|
-| `write-contract` | Write contracts with pinned runner headers and production patterns |
+| `write-contract` | Write production-quality GenLayer intelligent contracts, including pinned runner headers, architecture fit, consensus boundaries, equivalence principles, storage rules, and LLM resilience |
+| `genlayer-cli` | Deploy, interact with, and debug intelligent contracts using the GenLayer CLI |
 | `genvm-lint` | Validate contracts with the GenVM linter |
 | `direct-tests` | Write and run fast in-memory direct mode tests |
 | `integration-tests` | Write and run integration tests against GenLayer environments |
