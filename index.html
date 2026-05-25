@@ -789,8 +789,14 @@ Always assert \`tx_execution_succeeded(receipt)\` before reading state, checking
 
 - **GLSim** — Lightweight, Python natively
 - **Studio local** — Full GenVM, Docker required
-- **studio.genlayer.com** — Hosted, no setup
+- **studio.genlayer.com** — Hosted, no setup, gasless, rate-limited
 - **Testnet Bradbury** — Real network, funded accounts
+
+### Studio Rate Limits
+
+\`studio.genlayer.com\` enforces per-IP limits: **60 req/min, 1000 req/hr, 10000 req/day**. Hitting the limit returns HTTP 429 / \`-32429\`; wait for the current window to reset, throttle batch tests, or use \`localnet\` for heavy suites.
+
+\`-32028\` means the pending queue is full: up to 32 in-flight transactions per sender, with a separate per-contract cap. Wait for receipts instead of firing deploy/write transactions in parallel.
 
 ### When to Use
 
@@ -833,6 +839,12 @@ genlayer network list
 \`\`\`
 
 Networks: \`localnet\`, \`testnet-asimov\`, \`testnet-bradbury\`, \`mainnet\`
+
+### Studio Rate Limits
+
+\`studionet\` is gasless but rate-limited per IP: **60 req/min, 1000 req/hr, 10000 req/day**. Batch deploy/write scripts can trip HTTP 429 / \`-32429\`; wait for the window to reset, throttle submissions, or use \`localnet\` for heavy batches.
+
+\`-32028\` indicates the pending-queue cap: up to 32 in-flight transactions per sender, plus a separate per-contract cap. Wait for receipts between batches.
 
 ### Debugging Workflow
 
