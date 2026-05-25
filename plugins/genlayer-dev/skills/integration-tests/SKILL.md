@@ -110,7 +110,7 @@ def test_expensive_operation():
 
 - **GLSim** (`pip install genlayer-test[sim]`, `glsim --port 4000 --validators 5`) — lightweight, no Docker, ~1s startup. Runs Python natively, not in GenVM. Good for fast iteration.
 - **Studio local** (`genlayer up`) — full GenVM, real consensus, Docker required. Validates runtime compatibility.
-- **studio.genlayer.com** (StudioNet) — hosted Studio, no setup, rate-limited. **Gasless: no tokens required.** Accounts with 0 GEN balance can deploy and run tests normally.
+- **studio.genlayer.com** (StudioNet) — hosted Studio, no setup, rate-limited (see Common Issues). **Gasless: no tokens required.** Accounts with 0 GEN balance can deploy and run tests normally.
 - **Testnet Bradbury** — real network, requires funded accounts.
 
 ## When to Use Integration Tests
@@ -138,3 +138,8 @@ When working with mock validators, convert to dicts:
 ```python
 transaction_context = {"validators": [v.to_dict() for v in mock_validators]}
 ```
+
+### Studio rate limits (HTTP 429 / -32429)
+`studio.genlayer.com` enforces per-IP limits: **60 req/min, 1000 req/hr, 10000 req/day**. Limits aren't permanent — once tripped, further requests are rejected until the current window resets (next minute / hour / day cycle). Throttle batch tests, run heavy suites against `localnet` (GLSim or local Studio), or pace `.transact()` calls.
+
+`-32028` is the related pending-queue cap — **up to 32 in-flight txs per sender**; a separate cap also applies per contract to prevent flooding the shared Studio. Wait for receipts before submitting the next batch instead of firing in parallel.
