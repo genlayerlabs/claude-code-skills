@@ -1,0 +1,40 @@
+{
+  "name": "genlayernode",
+  "version": "1.0.0",
+  "description": "Interactive wizard to set up a GenLayer validator node on Linux.",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "homepage": "https://skills.genlayer.com/",
+  "repository": "https://github.com/genlayerlabs/skills",
+  "license": "MIT",
+  "keywords": [
+    "genlayer",
+    "validator",
+    "node",
+    "blockchain",
+    "operations"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "GenLayer Node",
+    "shortDescription": "Set up and operate GenLayer validator nodes",
+    "longDescription": "Interactive validator node setup guidance for Linux servers, covering prerequisites, staking, node software installation, configuration, operator keys, WebDriver, doctor checks, deployment, updates, and monitoring.",
+    "developerName": "GenLayer Labs",
+    "category": "Engineering",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Interactive"
+    ],
+    "websiteURL": "https://skills.genlayer.com/",
+    "defaultPrompt": [
+      "Use GenLayer Node to install a validator on Linux.",
+      "Use GenLayer Node to update my validator node.",
+      "Use GenLayer Node to configure validator monitoring."
+    ],
+    "brandColor": "#00E88A",
+    "screenshots": []
+  }
+}
