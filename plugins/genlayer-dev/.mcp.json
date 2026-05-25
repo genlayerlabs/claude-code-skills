@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "genlayer-docs": {
+      "type": "sse",
+      "url": "https://docs-mcp.genlayer.com/sse"
+    }
+  }
+}

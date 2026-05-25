@@ -1,0 +1,32 @@
+{
+  "name": "genlayerlabs",
+  "interface": {
+    "displayName": "GenLayer Labs"
+  },
+  "plugins": [
+    {
+      "name": "genlayer-dev",
+      "source": {
+        "source": "local",
+        "path": "./plugins/genlayer-dev"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    },
+    {
+      "name": "genlayernode",
+      "source": {
+        "source": "local",
+        "path": "./plugins/genlayernode"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    }
+  ]
+}
