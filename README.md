@@ -1,8 +1,10 @@
 # GenLayer Skills
 
-A [Claude Code](https://claude.ai/code) plugin marketplace providing skills for GenLayer development and operations.
+A plugin marketplace providing skills for GenLayer development and operations. Works with [Claude Code](https://claude.ai/code) and [Codex](https://github.com/openai/codex).
 
 ## Installation
+
+### Claude Code
 
 ```bash
 # Add the marketplace
@@ -12,6 +14,14 @@ A [Claude Code](https://claude.ai/code) plugin marketplace providing skills for 
 /plugin install genlayer-dev@genlayerlabs
 /plugin install genlayernode@genlayerlabs
 ```
+
+### Codex
+
+```bash
+codex plugin marketplace add genlayerlabs/skills
+```
+
+After adding the marketplace, enable individual plugins from Codex's plugin menu.
 
 ## Available Plugins
 

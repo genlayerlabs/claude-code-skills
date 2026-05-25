@@ -4,27 +4,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This repository is a **Claude Code plugin marketplace** (`genlayerlabs`). It provides installable plugins that guide AI assistants through complex operational procedures.
+This repository is a plugin marketplace (`genlayerlabs`) for [Claude Code](https://claude.ai/code) and [Codex](https://github.com/openai/codex). It provides installable plugins that guide AI assistants through complex operational procedures.
 
 ### Installation
 
 ```bash
-# Add the marketplace
-/plugin marketplace add genlayerlabs/claude-code-skills
-
-# Install a plugin
+# Claude Code
+/plugin marketplace add genlayerlabs/skills
+/plugin install genlayer-dev@genlayerlabs
 /plugin install genlayernode@genlayerlabs
+
+# Codex
+codex plugin marketplace add genlayerlabs/skills
+# Then enable plugins from Codex's plugin menu
 ```
 
 ## Marketplace Structure
 
 ```
 .claude-plugin/
-  marketplace.json              # Marketplace manifest
+  marketplace.json              # Claude Code marketplace manifest
+.agents/
+  plugins/
+    marketplace.json            # Codex marketplace manifest
 plugins/
   <plugin-name>/
     .claude-plugin/
-      plugin.json               # Plugin manifest
+      plugin.json               # Claude Code plugin manifest
+    .codex-plugin/
+      plugin.json               # Codex plugin manifest
+    .mcp.json                   # MCP server config (optional)
     skills/
       <skill-name>/
         SKILL.md                # Skill entry point with frontmatter
@@ -32,6 +41,8 @@ plugins/
         validations.yaml        # Automated checks (pre/post)
         sharp-edges.yaml        # Known edge cases and gotchas
         collaboration.yaml      # Dependencies and composition
+        agents/
+          openai.yaml           # Codex agent interface (optional)
 ```
 
 ## Skill Architecture
