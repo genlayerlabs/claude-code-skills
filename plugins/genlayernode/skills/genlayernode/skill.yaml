@@ -797,6 +797,33 @@ patterns:
       echo "Host:" && ls -la /opt/genlayer-node/data/node/logs/node.log | awk '{print $6,$7,$8}'
       echo "Container:" && docker exec genlayer-node-alloy ls -la /var/log/genlayer/node.log | awk '{print $6,$7,$8}'
 
+  - id: triage-validator-health
+    description: |
+      Diagnose validator downtime before changing configuration or requesting unban.
+      Covers shared RPC outages, temporary validator bans, and LLM provider capability errors.
+    commands:
+      - "cd /opt/genlayer-node && source .env && ./bin/genlayernode doctor"
+      - "curl -s http://localhost:9153/health | jq"
+      - "journalctl -u genlayer-node --since '1 hour ago' --no-pager | grep -Ei 'temporary ban|validator is banned|NO_PROVIDER_FOR_PROMPT|Gateway Timeout|504|get chain ID'"
+    decision_tree:
+      - symptom: "dependencies: get chain ID: 504 Gateway Timeout"
+        action: "Verify configured RPC/WebSocket and check for shared network incident before rotating endpoints."
+      - symptom: "temporary ban until epoch ...: validator is banned"
+        action: "Fix root cause, run doctor, then request unban with validator wallet address and sanitized health output."
+      - symptom: "NO_PROVIDER_FOR_PROMPT"
+        action: "Check enabled LLM backend, API key, model capability support, and restart affected GenVM LLM module."
+    safe_to_share:
+      - "validator wallet address"
+      - "network"
+      - "node_version and genvm_version"
+      - "sanitized health status"
+      - "redacted log lines"
+    never_share:
+      - "private keys or keystore passphrases"
+      - "LLM API keys"
+      - "full .env contents"
+      - "operator token values"
+
 anti_patterns:
   - id: skip-prerequisites
     description: "Starting installation without checking prerequisites"
