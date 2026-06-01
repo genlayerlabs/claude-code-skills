@@ -883,7 +883,7 @@ genlayer account send 0x123...abc 10gen
         {
             id: 'genlayernode',
             name: 'Validator Node Setup',
-            desc: 'Interactive wizard — from bare Linux to running validator in 20–45 minutes',
+            desc: 'Interactive wizard and triage runbook — from bare Linux to running validator in 20–45 minutes',
             badge: 'plugin',
             content: `## Validator Node Setup
 
@@ -930,6 +930,10 @@ Step 11  Monitoring setup (optional telemetry)
 - **Systemd** (recommended) — Auto-restart, journal logs
 - **Docker Compose** — Container isolation
 - **Manual** — Screen/tmux for testing
+
+### Operational Triage
+
+Includes safe runbooks for shared RPC outages, temporary validator bans, and LLM provider errors such as \`NO_PROVIDER_FOR_PROMPT\`.
 
 ### Supported LLM Providers
 

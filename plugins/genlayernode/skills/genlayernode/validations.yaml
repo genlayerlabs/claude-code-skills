@@ -205,6 +205,19 @@ validations:
     expect: "exit 0"
     message: "Cannot reach RPC endpoint. Check network connectivity."
 
+  - id: configured-rpc-chainid-reachable
+    type: command
+    command: |
+      sh -c 'set -a; [ -f /opt/genlayer-node/.env ] && . /opt/genlayer-node/.env || . ./.env; curl -sf -m 10 -X POST "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" -H "Content-Type: application/json" -d '\''{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'\'' | grep -q result'
+    expect: "exit 0"
+    message: "Configured rollup RPC did not answer eth_chainId. This may be a shared RPC outage; verify before changing node config."
+
+  - id: health-not-temporarily-banned
+    type: command
+    command: "curl -sf http://localhost:9153/health | grep -vi 'validator is banned' >/dev/null"
+    expect: "exit 0"
+    message: "Health endpoint reports a temporary validator ban. Fix the root cause, run doctor, then request unban with the validator wallet address only."
+
   # ============================================================================
   # ALLOY TELEMETRY CHECKS
   # ============================================================================

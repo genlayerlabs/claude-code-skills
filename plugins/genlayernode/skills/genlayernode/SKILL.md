@@ -203,6 +203,18 @@ Key points:
 - Restart LLM module per GenVM manager: `curl -X POST http://127.0.0.1:<port>/module/stop` then `/module/start`
 - No atomic restart — each instance restarts independently
 
+### Validator Triage: RPC Outages, Temporary Bans, and Provider Errors
+
+When a validator reports `504 Gateway Timeout`, `get chain ID`, `validator is banned`, or `NO_PROVIDER_FOR_PROMPT`, triage before changing configuration:
+
+1. **Classify the symptom.**
+   - `dependencies: get chain ID: 504 Gateway Timeout` usually means the configured rollup RPC is unavailable or overloaded. Confirm with `eth_chainId`/`eth_blockNumber` against the configured HTTP RPC and compare with other operators before editing local node files.
+   - `/health` with `temporary ban until epoch ...: validator is banned` means the node may be healthy but consensus has temporarily banned the validator. Fix the root cause first, then request unban with the validator wallet address.
+   - `NO_PROVIDER_FOR_PROMPT` means GenVM could not find an enabled LLM backend that satisfies the prompt capabilities. Check enabled providers, API keys, JSON/image capability support, and restart the affected GenVM LLM module after config changes.
+2. **Do not rotate endpoints blindly.** Shared Bradbury/Asimov RPC incidents can affect multiple operators at once; switching URLs without an official replacement can make recovery harder.
+3. **Collect safe diagnostics only.** Share sanitized health output, node/genvm versions, network, and validator address when requesting operator help. Never paste API keys, passwords, private keys, or full `.env` contents.
+4. **Use `doctor` before restart when possible.** Run `cd /opt/genlayer-node && source .env && ./bin/genlayernode doctor` to catch provider/config issues before putting the service back into rotation.
+
 ---
 
 ## Requirements

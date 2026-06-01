@@ -199,6 +199,59 @@ edges:
       3. Check if provider is operational
     severity: critical
 
+  - id: shared-rpc-outage
+    description: "Configured rollup RPC or WebSocket endpoint is experiencing a shared outage"
+    detect: |
+      # HTTP RPC smoke tests against the configured endpoint
+      source /opt/genlayer-node/.env 2>/dev/null || source .env
+      curl -sS -m 10 -X POST "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" \
+        -H "Content-Type: application/json" \
+        -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
+      curl -sS -m 10 -X POST "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" \
+        -H "Content-Type: application/json" \
+        -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":2}'
+
+      # Node logs often show: dependencies: get chain ID: 504 Gateway Timeout
+      journalctl -u genlayer-node --since "30 min ago" --no-pager | \
+        grep -Ei "get chain ID|Gateway Timeout|504|websocket|rollup"
+    impact: |
+      Node cannot bootstrap or sync even when local configuration is correct.
+      Multiple validators may report the same failure at the same time.
+    fix: |
+      1. Treat as network/provider incident first; do not assume local config drift.
+      2. Verify the configured HTTP RPC and WebSocket endpoints independently.
+      3. Check community/operator channels or official status for a shared incident.
+      4. Use an officially provided replacement endpoint if one exists.
+      5. If no replacement exists, avoid repeated restart loops and keep sanitized
+         diagnostics ready: network, node version, GenVM version, health status,
+         and redacted log lines.
+    severity: high
+
+  # ============================================================================
+  # VALIDATION STATUS
+  # ============================================================================
+
+  - id: temporary-validator-ban
+    description: "Health endpoint reports validator is temporarily banned"
+    detect: |
+      curl -s http://localhost:9153/health | jq .
+      # Look for: temporary ban until epoch ...: validator is banned
+
+      journalctl -u genlayer-node --since "1 hour ago" --no-pager | \
+        grep -Ei "temporary ban|validator is banned|NO_PROVIDER_FOR_PROMPT|provider|llm|Gateway Timeout"
+    impact: |
+      The node can be running and connected while validation remains down until
+      the temporary ban expires or an operator unbans it after the root cause is fixed.
+    fix: |
+      1. Fix the underlying cause first: LLM provider availability/capabilities,
+         RPC outage, operator funding, or node version/config drift.
+      2. Run `./bin/genlayernode doctor` and re-check `/health`.
+      3. If requesting help, share only sanitized details: validator wallet address,
+         network, node version, GenVM version, and health status. Do not paste
+         API keys, private keys, passwords, or full `.env` contents.
+      4. Ask for unban only after the node is healthy enough to avoid immediate re-ban.
+    severity: high
+
   # ============================================================================
   # KEY IMPORT
   # ============================================================================
