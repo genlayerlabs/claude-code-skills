@@ -140,12 +140,28 @@ Can validators reproduce the exact same normalized output?
 │         Examples: blockchain RPC, stable REST APIs.
 │
 └── NO  → Write a custom validator function (run_nondet_unsafe)
-          You control the full logic: rerun and compare with tolerances,
-          derive status, extract stable fields, or evaluate the leader's
-          output directly without rerunning — whatever your contract needs.
+          Default: produce independent evidence. Usually rerun the same task
+          and compare decision fields, derived status, scores, or other stable
+          outputs with explicit tolerances. Only skip the second answer when the
+          validator can judge the leader output against source data and criteria.
 ```
 
 GenLayer also provides `prompt_comparative` and `prompt_non_comparative` as convenience wrappers, but most contracts outgrow them quickly. Start with a custom validator function for full flexibility.
+
+### Independent verification by default
+
+For LLM and web operations, never trust the leader. The validator must verify the substance of the leader's answer using evidence other than the leader's answer alone. In practice that means one of:
+
+- Rerun the same LLM/web task and compare the stable decision fields.
+- Fetch the same source data and independently derive the status being stored.
+- Run an explicit comparative LLM judgment over the leader output and validator output.
+- For open-ended outputs, judge the leader output against the same input/source data and explicit criteria.
+
+Do not write validators that only check `leader_result.calldata` for a valid JSON shape, allowed enum value, non-empty summary, or confidence in range. That is leader-output-only validation, not consensus. It trusts the leader's substantive answer 100% and only proves that the leader formatted the answer correctly.
+
+Non-comparative validation does not mean "trust the leader." It means the validator does not produce a second candidate answer. It still must read the same input/source data and ask whether the leader output is valid under clear criteria. A summary validator, for example, should check whether the proposed summary is faithful to the article, covers the material points, avoids hallucinated facts, and satisfies length/style constraints.
+
+Classification, scoring, extraction, authenticity decisions, safety decisions, ranking, and settlement logic almost always need comparative validation: rerun or independently derive the answer, then compare the decision field, extracted fields, score bucket, or derived status. If the validator only checks that the leader chose an allowed label such as `authentic`, `suspicious`, or `inconclusive`, the leader is deciding alone.
 
 ### strict_eq — Deterministic calls only
 
@@ -161,7 +177,7 @@ Never use for LLM calls or web pages that change between requests.
 
 ### Custom Validator Function (most common)
 
-The default choice for non-deterministic operations. You write the leader function and a validator function with your own comparison logic.
+The default choice for non-deterministic operations. You write the leader function and a validator function with your own comparison logic. The validator should independently perform or verify the same substantive task, then compare the result fields that matter.
 
 ```python
 def score_content(self, content: str) -> dict:
@@ -195,7 +211,9 @@ def score_content(self, content: str) -> dict:
 
 ### Convenience Wrappers
 
-`prompt_comparative` and `prompt_non_comparative` send both outputs to an LLM with your principle string. Convenient for prototyping but limited — for most production contracts, prefer a custom validator function with explicit comparison logic.
+`prompt_comparative` reruns the task and sends both outputs to an LLM with your principle string. `prompt_non_comparative` does not rerun the task; it asks validators to judge the leader output against input data and criteria. Both are convenient for prototyping but limited - for most production contracts, prefer a custom validator function with explicit comparison logic.
+
+Prefer `prompt_comparative` unless you can explain why independently doing the task again would be meaningless and how the validator will still verify the leader output against source data. If the only reason is "outputs may differ," compare the decision fields, normalize the output, derive a status, or use tolerance instead of dropping comparison entirely.
 
 ```python
 def resolve(self) -> str:
@@ -526,6 +544,8 @@ def validator_fn(leaders_res: gl.vm.Result) -> bool:
 | Insert fields in the middle of a dataclass | Append at END only (for upgradable contracts) | Storage layout is positional — insertion shifts all subsequent fields |
 | Store `Enum` directly | Store `enum.value` as `str` | Enum type not supported in storage |
 | Ignore LLM response format | Validate type, sanitize JSON, alias keys | LLMs return unpredictable formats |
+| Schema-only or leader-output-only validator for LLM/web output | Rerun the task, independently derive the result, or verify against source data | Format checks prove only that JSON is well-formed; they do not verify the leader's answer |
+| `prompt_non_comparative` for classification/scoring/extraction decisions | Comparative validator with field-level comparison or tolerance | Decisions need agreement on the substantive result; allowed-label checks let one leader decide alone |
 | Let validator agree on LLM errors | Return `False` (disagree) to force rotation | Agreeing on broken LLM output locks bad state |
 | Use bare `Exception` in contracts | Use `gl.vm.UserError` with error prefix | Bare exceptions become unrecoverable VMError |
 | Compare variable API fields in validators | Extract stable fields or derive status | Timestamps, counts change between calls |

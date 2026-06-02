@@ -598,7 +598,8 @@ Before returning any contract code, verify:
 
 - **Architecture Fit** — Decide whether GenLayer should own the consensus/settlement step or whether the work belongs in a frontend/backend/off-chain LLM
 - **Runner Header** — Pinned \`py-genlayer\` version hashes are mandatory for GenLayer networks
-- **Equivalence Principle** — The critical decision: \`strict_eq\` for deterministic calls, custom validator functions for LLM/web operations
+- **Equivalence Principle** — The critical decision: \`strict_eq\` for deterministic calls, independent verification for LLM/web operations
+- **Validator Consensus** — Schema-only validators are rejected as an anti-pattern; validators must rerun, derive, compare, or verify against source data
 - **Runner Dependencies** — Pin \`py-genlayer\` version hashes instead of using \`test\`, \`latest\`, or unversioned aliases
 - **Storage Rules** — \`TreeMap\` instead of dict, \`DynArray\` instead of list, \`u256\` for money
 - **LLM Resilience** — Defensive parsing, key variation handling, aggressive coercion, JSON response format
@@ -644,6 +645,8 @@ Always pin a specific runner version hash in the contract's first line. All GenL
 
 - \`py-genlayer:test\`, \`py-genlayer:latest\`, or unversioned \`py-genlayer\` — All GenLayer networks reject runner aliases; pin the documented runner version hash
 - \`strict_eq()\` for LLM calls — LLM outputs are non-deterministic
+- Schema-only validators for LLM/web output — format checks do not verify the leader's answer
+- \`prompt_non_comparative\` for classification/scoring/extraction decisions — use comparative validation because decisions need substantive agreement
 - \`dict\` / \`list\` for storage — use \`TreeMap\` / \`DynArray\`
 - \`float\` for money — use atto-scale \`u256\`
 - Inserting fields in middle of dataclass — always append at END
