@@ -27,7 +27,7 @@ After adding the marketplace, enable individual plugins from Codex's plugin menu
 
 | Plugin | Description |
 |--------|-------------|
-| `genlayer-dev` | Development skills for intelligent contracts — pinned GenVM runner versions, linting, direct mode tests, and integration tests. |
+| `genlayer-dev` | Development skills for intelligent contracts and apps — pinned GenVM runner versions, linting, tests, CLI workflows, and design-system guidance. |
 | `genlayernode` | Interactive wizard to set up a GenLayer validator node on Linux. |
 
 ## Usage
@@ -43,6 +43,7 @@ After installing a plugin, invoke its skills:
 | `genvm-lint` | Validate contracts with the GenVM linter |
 | `direct-tests` | Write and run fast in-memory direct mode tests |
 | `integration-tests` | Write and run integration tests against GenLayer environments |
+| `genlayer-design` | Apply the GenLayer Design System to frontends, dashboards, demo apps, and screenshots |
 
 ### genlayernode
 

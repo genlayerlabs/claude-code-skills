@@ -1,7 +1,7 @@
 {
   "name": "genlayer-dev",
-  "version": "1.1.3",
-  "description": "Development skills for GenLayer intelligent contracts: pinned GenVM runner versions, linting, direct mode tests, and integration tests.",
+  "version": "1.1.4",
+  "description": "Development skills for GenLayer intelligent contracts and apps: pinned GenVM runner versions, linting, tests, CLI workflows, and design-system guidance.",
   "author": {
     "name": "GenLayer Labs",
     "url": "https://github.com/genlayerlabs"
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "GenLayer Dev",
     "shortDescription": "Build and test GenLayer intelligent contracts",
-    "longDescription": "Development skills for writing production-quality GenLayer intelligent contracts, using the GenLayer CLI, validating contracts with GenVM linting, and running direct or integration tests.",
+    "longDescription": "Development skills for writing production-quality GenLayer intelligent contracts, using the GenLayer CLI, validating contracts with GenVM linting, running direct or integration tests, and applying the GenLayer Design System to app UI.",
     "developerName": "GenLayer Labs",
     "category": "Engineering",
     "capabilities": [
@@ -33,7 +33,8 @@
     "defaultPrompt": [
       "Use GenLayer Dev to write a contract with a pinned runner.",
       "Use GenLayer Dev to lint and test my GenLayer contract.",
-      "Use GenLayer Dev to debug a GenLayer CLI deployment."
+      "Use GenLayer Dev to debug a GenLayer CLI deployment.",
+      "Use GenLayer Dev to align this dashboard with the GenLayer Design System."
     ],
     "brandColor": "#00E88A",
     "screenshots": []

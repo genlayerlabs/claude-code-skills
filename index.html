@@ -880,6 +880,41 @@ genlayer account use dev1
 genlayer account list
 genlayer account send 0x123...abc 10gen
 \`\`\``
+        },
+        {
+            id: 'genlayer-design',
+            name: 'GenLayer Design',
+            desc: 'Apply the canonical GenLayer Design System to frontends and dashboards',
+            badge: 'plugin',
+            content: `## GenLayer Design
+
+Use this skill when creating or modifying GenLayer-facing UI: dashboards, explorer pages, validator/operator views, demo apps, landing pages, hackathon prototypes, or screenshots intended to represent GenLayer.
+
+### Canonical Source
+
+- Repository: [genlayer-foundation/genlayer-design](https://github.com/genlayer-foundation/genlayer-design)
+- Agent entry point: [DESIGN.md](https://github.com/genlayer-foundation/genlayer-design/blob/main/DESIGN.md)
+
+### Workflow
+
+1. Read the current \`DESIGN.md\` before choosing colors, typography, spacing, components, or brand assets.
+2. Use documented tokens and component patterns instead of inventing one-off styles.
+3. Keep product UI changes in the product/app repo; treat \`genlayer-design\` as the source of truth for brand guidance.
+4. Preserve contrast, focus states, keyboard navigation, and small-screen behavior.
+5. Run the app's normal lint/build/typecheck or visually inspect static mockups before handoff.
+
+### Recommended Agent Prompt
+
+\`\`\`text
+Use the GenLayer Design System. First read https://github.com/genlayer-foundation/genlayer-design/blob/main/DESIGN.md, then apply its tokens, components, brand assets, and accessibility guidance to this GenLayer UI. Do not invent new brand colors or component styles unless DESIGN.md explicitly leaves the area unspecified.
+\`\`\`
+
+### Sharp Edges
+
+- Do not copy private/internal context into public UI.
+- Do not hardcode secrets, wallet private keys, API keys, or real user data in examples.
+- Do not treat this skill as the design source of truth; it routes agents to the canonical design repository.
+- Confirm product boundaries before applying GenLayer branding to non-GenLayer or partner-owned products.`
         }
     ],
     operate: [
