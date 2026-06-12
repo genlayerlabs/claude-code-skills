@@ -201,7 +201,7 @@ validations:
 
   - id: rpc-url-reachable
     type: command
-    command: "curl -sf -X POST https://genlayer-testnet.rpc.caldera.xyz/http -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' | grep -q 'result'"
+    command: "curl -sf -m 30 -X POST https://zksync-os-testnet-genlayer.zksync.dev -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' | grep -q 'result'"
     expect: "exit 0"
     message: "Cannot reach RPC endpoint. Check network connectivity."
 
