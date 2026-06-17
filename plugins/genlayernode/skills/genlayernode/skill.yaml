@@ -243,10 +243,10 @@ inputs_required:
     required: true
 
   - id: enable_monitoring
-    description: "Enable telemetry push to central monitoring"
+    description: "Enable telemetry push to central monitoring (REQUIRED on testnet for every validator)"
     type: boolean
-    default: false
-    required: false
+    default: true
+    required: true
 
 # Configuration wizard questions
 config_wizard:
@@ -552,7 +552,7 @@ patterns:
       NODE_OPS_PORT=${OPS_PORT:-9153}
       NODE_ADMIN_PORT=${ADMIN_PORT:-9155}
 
-      # Monitoring (optional)
+      # Monitoring (REQUIRED on testnet)
       # CENTRAL_MONITORING_USERNAME=  # see Foundation onboarding doc
       # CENTRAL_MONITORING_PASSWORD=
       # CENTRAL_LOKI_USERNAME=  # see Foundation onboarding doc
@@ -760,6 +760,20 @@ patterns:
       - "curl -s http://localhost:9153/health | jq"
       - "curl -s http://localhost:9153/metrics | grep genlayer_node_synced"
 
+  - id: link-operator-wallet-portal
+    description: |
+      Link the operator wallet to the validator's portal account so their
+      validators show up under their profile. Can be done as soon as the
+      operator wallet address exists — no need to wait for the node to sync.
+    steps:
+      - "Open https://portal.genlayer.foundation and sign in"
+      - "Go to Profile -> Edit -> Validator Settings -> Link Operator Wallet"
+      - "Enter the operator wallet address used when creating the validator and save"
+      - "In Profile -> Edit, also set the profile image and banner (required for the validator to display properly)"
+    notes:
+      - "Portal links by operator address and auto-attaches all synced validator wallets for that operator across Asimov and Bradbury"
+      - "Use the same operator wallet on both networks if possible so one link covers all validators"
+
   - id: check-systemd-status
     description: |
       Check systemd service status for binary deployment.
@@ -769,7 +783,8 @@ patterns:
 
   - id: enable-monitoring
     description: |
-      Enable telemetry push to central monitoring (optional).
+      Enable telemetry push to central monitoring.
+      REQUIRED on testnet — set this up for every validator, do not skip.
     env_vars:
       - "CENTRAL_MONITORING_USERNAME"
       - "CENTRAL_MONITORING_PASSWORD"
@@ -1214,6 +1229,19 @@ procedure:
       - "curl -s http://localhost:9153/health | jq"
       - "curl -s http://localhost:9153/metrics | grep genlayer_node_synced"
 
+  - step: "Link operator wallet in the portal"
+    detail: |
+      Tell the validator they can now link their account in the portal — this
+      can happen as soon as the operator wallet address exists, even before the
+      node finishes syncing.
+      1. Open https://portal.genlayer.foundation and sign in
+      2. Profile -> Edit -> Validator Settings -> Link Operator Wallet
+      3. Enter the operator wallet address used when creating the validator and save
+      4. In Profile -> Edit, also set the profile image and banner (required)
+      The portal links by operator address and automatically attaches all synced
+      validator wallets for that operator across Asimov and Bradbury. Use the same
+      operator wallet on both networks if possible.
+
   - step: "Decide: Clean up previous version?"
     decision_point: true
     condition: "previous_version_exists"
@@ -1229,14 +1257,12 @@ procedure:
         action: "Skip cleanup"
         note: "Previous version will remain at /opt/genlayer-node/${PREVIOUS_VERSION}"
 
-  - step: "Decide: Enable monitoring?"
-    decision_point: true
-    question: "Enable telemetry push to central monitoring?"
-    options:
-      - answer: "Yes"
-        next_step: "Configure and start monitoring"
-      - answer: "No"
-        next_step: "Done"
+  - step: "Set up monitoring (required on testnet)"
+    detail: |
+      Monitoring is MANDATORY for every validator during testnet — do not skip it
+      or present it as optional. Configure and start telemetry push to central
+      monitoring before considering the setup complete. See monitoring-procedure.md.
+    next_step: "Configure and start monitoring"
 
 handoffs:
   - skill: "genlayer-validator-monitor"

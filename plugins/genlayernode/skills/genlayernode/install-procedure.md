@@ -387,5 +387,6 @@ curl -s http://localhost:9153/health | jq '.checks.validating'
 After installation completes:
 1. Wait for sync to complete (check `journalctl` for progress)
 2. Verify validator is active: `genlayer staking validator-info --validator 0xYOUR_WALLET`
-3. Optional: Enable monitoring — see `monitoring-procedure.md`
-4. Optional: Set validator identity: `genlayer staking set-identity`
+3. Link your account in the portal: at https://portal.genlayer.foundation go to Profile -> Edit -> Validator Settings -> Link Operator Wallet and enter your operator wallet address. It auto-attaches all your validators across Asimov and Bradbury (you can do this anytime after the operator wallet exists). Also set your profile image and banner.
+4. Enable monitoring (REQUIRED on testnet for every validator) — see `monitoring-procedure.md`
+5. Optional: Set validator identity: `genlayer staking set-identity`

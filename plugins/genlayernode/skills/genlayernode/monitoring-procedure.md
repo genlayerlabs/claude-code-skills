@@ -1,5 +1,10 @@
 # GenLayer Validator Monitoring Setup Procedure
 
+> **REQUIRED during testnet.** Monitoring is **mandatory for every validator** on
+> testnet — it is not optional. The Foundation requires each validator to push
+> metrics and logs so node health can be tracked. Complete this procedure as part
+> of every validator setup.
+
 ## Goal
 Enable centralized monitoring by pushing metrics and logs to GenLayer Foundation's Grafana Cloud using Alloy.
 
