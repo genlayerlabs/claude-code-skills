@@ -553,9 +553,9 @@ patterns:
       NODE_ADMIN_PORT=${ADMIN_PORT:-9155}
 
       # Monitoring (optional)
-      # CENTRAL_MONITORING_USERNAME=
+      # CENTRAL_MONITORING_USERNAME=  # see Foundation onboarding doc
       # CENTRAL_MONITORING_PASSWORD=
-      # CENTRAL_LOKI_USERNAME=
+      # CENTRAL_LOKI_USERNAME=  # see Foundation onboarding doc
       # CENTRAL_LOKI_PASSWORD=
       # VALIDATOR_NAME=
 
