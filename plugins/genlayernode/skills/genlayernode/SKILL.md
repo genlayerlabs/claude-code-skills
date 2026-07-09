@@ -329,8 +329,8 @@ Guide validators through complete GenLayer node installation including:
 |---------|---------------|
 | RPC URL | **No default** - user must provide |
 | WebSocket | **No default** - user must provide |
-| Consensus Address | `0xe66B434bc83805f380509642429eC8e43AE9874a` |
-| Genesis Block | `17326` |
+| Consensus Address (AddressManager) | **Per-deployment — no default** (v0.6+: `consensus.consensusaddress` in config.yaml) |
+| Genesis Block | **Per-deployment** — AddressManager deploy block (v0.6+: `consensus.genesis`; missing ⇒ scans from block 0) |
 | Install Path | `/opt/genlayer-node` |
 | RPC Port | `9151` |
 | Ops Port | `9153` |
@@ -488,18 +488,25 @@ sudo chown -R $USER:$USER /opt/genlayer-node
 
 # Setup symlinks for easy access
 ln -sfn /opt/genlayer-node/${VERSION}/bin /opt/genlayer-node/bin
-ln -sfn /opt/genlayer-node/${VERSION}/third_party /opt/genlayer-node/third_party
 ln -sfn /opt/genlayer-node/${VERSION}/data /opt/genlayer-node/data
 ln -sfn /opt/genlayer-node/${VERSION}/configs /opt/genlayer-node/configs
 ln -sfn /opt/genlayer-node/${VERSION}/docker-compose.yaml /opt/genlayer-node/docker-compose.yaml
 ln -sfn /opt/genlayer-node/${VERSION}/.env /opt/genlayer-node/.env
 ln -sfn /opt/genlayer-node/${VERSION}/alloy-config.river /opt/genlayer-node/alloy-config.river
 ln -sfn /opt/genlayer-node/${VERSION}/genvm-module-web-docker.yaml /opt/genlayer-node/genvm-module-web-docker.yaml
+# GenVM location differs by version — create the matching symlink:
+#   v0.6+ : genvm lives under opt/genvm/<ver>  (REQUIRED, else `./opt/genvm/...` won't resolve)
+ln -sfn /opt/genlayer-node/${VERSION}/opt /opt/genlayer-node/opt
+#   <=v0.5: genvm lives under third_party/     (use this instead)
+# ln -sfn /opt/genlayer-node/${VERSION}/third_party /opt/genlayer-node/third_party
 ```
 
 **Run GenVM setup:**
 ```bash
-python3 /opt/genlayer-node/third_party/genvm/bin/setup.py
+# v0.6+: setup.py is under opt/genvm/<genvm-ver>/bin (there is NO third_party/)
+python3 /opt/genlayer-node/opt/genvm/<genvm-ver>/bin/setup.py --interactive false --os linux --arch amd64
+# <=v0.5:
+# python3 /opt/genlayer-node/third_party/genvm/bin/setup.py
 ```
 
 This downloads GenVM dependencies (genvm binary and genvm-modules).
@@ -671,23 +678,25 @@ curl -s http://localhost:4444/status | jq '.value.ready'
 Run the doctor command to verify all configuration is correct:
 
 ```bash
-cd /opt/genlayer-node && source .env && ./bin/genlayernode doctor check
+# v0.6+: the subcommand is `doctor` (NOT `doctor check`). Use `set -a` so .env LLM keys are
+# EXPORTED to the child process, and --expected-consensus-address for custom/pre-release
+# deployments (e.g. pre-clarke); -N asimov|bradbury only covers the built-in networks.
+cd /opt/genlayer-node
+set -a; source .env; set +a
+./bin/genlayernode doctor --expected-consensus-address 0x<AddressManager>
 ```
 
-**Expected output on success:**
-```
-GenLayer Node Doctor
-===================
-
-  ✓ GenVM Binaries: Found at /opt/genlayer-node/third_party/genvm/bin
-  ✓ WebDriver: Connected to http://localhost:4444 (ready: true)
-
-✓ All checks passed!
-```
+**Expected output on success:** all checks ✓ — GenLayer Chain, consensus contracts,
+validator/operator wallet (validator mode), GenVM binaries + module config, at least one
+LLM provider, and WebDriver connectivity.
 
 **If checks fail:**
-- GenVM Binaries missing: Re-run `python3 /opt/genlayer-node/third_party/genvm/bin/setup.py`
-- WebDriver not ready: Check `docker logs genlayer-node-webdriver`
+- GenVM Binaries "not found at opt/genvm/<ver>/...": the `opt` symlink is missing —
+  `ln -sfn ${VERSION}/opt /opt/genlayer-node/opt` (v0.6+), then re-run.
+- GenVM Binaries missing entirely: re-run setup.py (see Download & Setup).
+- LLM provider "not set" though `.env` has it: you sourced `.env` without `set -a` (vars not exported).
+- Consensus check fails on a custom deployment: pass `--expected-consensus-address 0x<AddressManager>`.
+- WebDriver not ready: check `docker logs genlayer-node-webdriver`.
 
 ### 8. Deployment Method
 Ask user which deployment method they prefer:
@@ -740,7 +749,28 @@ journalctl -u genlayer-node -f
 
 ```bash
 cd /opt/genlayer-node && source .env && docker compose --profile node up -d
+# Add central telemetry (Alloy metrics + logs push): append --profile monitoring
 ```
+
+**v0.6+ / pre-release Docker notes:**
+- Run `docker compose` **from the version directory** (e.g. `/opt/genlayer-node/<version>`)
+  so relative bind mounts (`./configs`, `./data`, `./genvm-module-*.yaml`) resolve.
+- **Full node**: set `node.mode: "full"` in config.yaml — no wallet/operator/keystore/staking
+  needed (logs: "full node mode detected, skipping validator setup").
+- **Custom image (e.g. ECR)**: override the node service `image:` (edit the compose or add a
+  `docker-compose.override.yml`). If the instance role lacks ECR permissions, authenticate
+  Docker with an admin token:
+  `aws ecr get-login-password --profile <p> --region <r> | docker login --username AWS --password-stdin <acct>.dkr.ecr.<r>.amazonaws.com`
+- **LLM in Docker**: mount a `genvm-module-llm.yaml` (built from the release's
+  `genvm-modules-llm-release.yaml`) onto `/app/opt/genvm/<ver>/config/genvm-module-llm.yaml`
+  so your provider is enabled, and set `GENVM_VERSION` in `.env`.
+- **Possible crash-loop — symptom-driven, not version-gated**: IF the boot GenVM self-test
+  fails with `ADDRESS_FORBIDDEN` reaching the webdriver (genvm's SSRF filter blocks the
+  `webdriver-container` HOSTNAME's private IP; literal IPs are never filtered), point
+  `webdriver_host` at the webdriver's literal IP. Apply only if you actually see the symptom —
+  a release may already allow the configured webdriver_host, in which case it won't occur. Do
+  NOT hardcode a compose subnet in shipped assets. See sharp-edge
+  `docker-webdriver-host-ssrf-address-forbidden`.
 
 #### Manual Deployment (screen/tmux)
 

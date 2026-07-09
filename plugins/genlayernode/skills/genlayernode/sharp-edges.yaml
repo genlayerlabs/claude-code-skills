@@ -25,18 +25,21 @@ edges:
   # ============================================================================
 
   - id: wrong-architecture
-    description: "Installing on ARM64 instead of AMD64"
+    description: "Arch mismatch between host and the binary/Docker image (amd64 vs arm64)"
     detect: |
       uname -m
-      # Must return x86_64, not aarch64 or arm64
-    impact: "Binaries will not execute. Container won't start."
+      # x86_64  == amd64  (most Linux servers, Intel/AMD)  -> use linux-amd64 tarball / *-amd64 image
+      # aarch64 == arm64  (AWS Graviton, Apple Silicon)    -> use linux-arm64 tarball / *-arm64 image
+      # For a Docker image, confirm it matches the host:
+      docker image inspect <image> --format 'Arch: {{.Architecture}} / OS: {{.Os}}'
+    impact: "Binaries won't execute (Exec format error); an arm64 image on x86_64 only runs under slow QEMU emulation (bad for a node)."
     fix: |
-      Use an AMD64 Linux server:
-      - AWS: t3/m5/c5 instances (not Graviton)
-      - GCP: n1/n2 instances
-      - Azure: D/E series
-
-      If on Mac M1/M2, use a cloud server or VM.
+      NAMING (commonly confused): amd64 = x86-64 = standard Linux servers (NOT mac-specific);
+      arm64 = aarch64 = AWS Graviton and Apple-Silicon Macs. Pick the artifact/image tag that
+      MATCHES `uname -m`:
+        - x86_64 host  -> genlayer-node-linux-amd64 tarball / ...:<ver>-amd64 image
+        - aarch64 host -> genlayer-node-linux-arm64 tarball / ...:<ver>-arm64 image
+      If a repo has both -amd64 and -arm64 tags, do not assume the untagged/`latest` tag is amd64.
     severity: critical
 
   - id: insufficient-ram
@@ -154,8 +157,47 @@ edges:
       pip3 --version
 
       Re-run setup:
+      # v0.6+: setup.py lives under opt/genvm/<ver>/bin (there is NO third_party/)
+      cd ${VERSION} && python3 ./opt/genvm/<genvm-ver>/bin/setup.py --interactive false --os linux --arch amd64
+      # older layout:
       cd ${VERSION} && python3 ./third_party/genvm/bin/setup.py
     severity: critical
+
+  - id: genvm-macos-executor-in-linux-tarball
+    description: "linux-amd64 tarball ships a macOS (Mach-O) GenVM executor -> Exec format error"
+    detect: |
+      file opt/genvm/*/executor/*/bin/genvm 2>/dev/null || file third_party/genvm/bin/genvm 2>/dev/null
+      # A linux host needs 'ELF 64-bit ... x86-64'. 'Mach-O' = wrong-OS binary was bundled.
+      # setup.py aborts at: run_check_command([executor, '--version']) -> OSError Exec format error
+    impact: |
+      GenVM cannot run; setup.py aborts; node never starts. Seen in mis-packaged releases
+      built/packaged on macOS (the tarball also carries ._* AppleDouble junk + LIBARCHIVE.xattr warnings).
+    fix: |
+      Force setup.py to re-download the correct-arch executor from GitHub releases
+      (setup.py SKIPS the download when a binary already exists at that path, so delete it first):
+        G=opt/genvm/<genvm-ver>                 # e.g. opt/genvm/v0.3.0-rc6
+        rm -rf $G/executor/<genvm-ver>          # remove the wrong Mach-O executor
+        python3 $G/bin/setup.py --interactive false --os linux --arch amd64 --executor-download true
+        file $G/executor/<genvm-ver>/bin/genvm  # must now be ELF x86-64
+      Also extract release tarballs with --exclude='._*' to drop macOS AppleDouble files.
+    severity: critical
+
+  - id: v06-genvm-opt-layout-and-opt-symlink
+    description: "v0.6+ ships genvm under opt/genvm/<ver> (no third_party/) and needs an `opt` symlink"
+    detect: |
+      ls -d opt/genvm/*/ 2>/dev/null          # v0.6+ layout present
+      ls -d third_party/genvm/ 2>/dev/null    # older layout
+      # If config.yaml has genvm.root_dir: ./opt/genvm/<ver> but /opt/genlayer-node/opt is missing,
+      # doctor reports: 'genvm-modules: not found at opt/genvm/<ver>/bin/genvm-modules'
+    impact: |
+      The node/doctor resolve genvm at ./opt/genvm/<ver> RELATIVE to /opt/genlayer-node.
+      Without an `opt` symlink (alongside bin/, configs/, data/), the GenVM binaries and
+      module configs are 'not found' and config validation fails.
+    fix: |
+      Create the `opt` symlink in addition to the usual ones:
+        ln -sfn <version>/opt /opt/genlayer-node/opt
+      (v0.6+ has NO third_party/; setup.py is at opt/genvm/<ver>/bin/setup.py.)
+    severity: high
 
   # ============================================================================
   # CONFIGURATION
@@ -174,16 +216,26 @@ edges:
     severity: high
 
   - id: wrong-contract-addresses
-    description: "Using outdated or wrong consensus contract address (AddressManager)"
+    description: "Using outdated or wrong consensus AddressManager / genesis (both are PER-DEPLOYMENT)"
     detect: |
-      grep GENLAYERNODE_CONSENSUS_CONSENSUSADDRESS .env
-      # Compare with official documentation
-    impact: "Node cannot interact with consensus, transactions fail."
+      # v0.6+: consensus config lives in config.yaml, NOT .env
+      grep -E "consensusaddress|genesis" configs/node/config.yaml
+      # Older/.env-based deploys:
+      grep -E "GENLAYERNODE_CONSENSUS_CONSENSUSADDRESS|GENLAYERNODE_CONSENSUS_GENESIS" .env 2>/dev/null
+    impact: "Node cannot interact with consensus, or scans from block 0 (very slow) if genesis is wrong/missing."
     fix: |
-      Use the official AddressManager contract address from docs.
-      Set in .env:
-      GENLAYERNODE_CONSENSUS_CONSENSUSADDRESS=0xe66B434bc83805f380509642429eC8e43AE9874a
-      GENLAYERNODE_CONSENSUS_GENESIS=17326
+      The AddressManager address AND genesis block are PER-DEPLOYMENT — there is no
+      single correct value. Get them from the deployment you are joining:
+        - asimov / bradbury: from official docs or a working peer's config
+        - custom/pre-release (e.g. pre-clarke): from the release's shipped config.yaml
+      v0.6+ sets them in configs/node/config.yaml under `consensus:`
+        consensus:
+          consensusaddress: "0x...."   # AddressManager for THIS deployment
+          genesis: <deploy-block>       # AddressManager deployment block (pin it!)
+      A missing/wrong `genesis` makes the node auto-scan from block 0 of a ~14M-block
+      chain (synced_block stuck at 0). Confirm the address resolves at runtime:
+      /health should report the intended `network`, and `genlayer_node_info` should show
+      the expected address_manager + staking_address.
     severity: critical
 
   - id: rpc-url-unreachable
@@ -634,17 +686,23 @@ edges:
     severity: critical
 
   - id: consensus-genesis-not-set
-    description: "Consensus genesis block not configured"
+    description: "Consensus genesis not pinned -> node scans from block 0 (sync effectively never completes)"
     detect: |
-      grep GENLAYERNODE_CONSENSUS_GENESIS .env
-      # Should have a value (usually 0 for testnet)
-    impact: "Node may sync from wrong starting point."
+      # v0.6+: in config.yaml under consensus:
+      grep -E "^\s*genesis:" configs/node/config.yaml
+      # Symptom: synced_block stays 0 while latest_block is ~14M
+      curl -s http://localhost:9153/metrics | grep -E "genlayer_node_synced|blocks_behind"
+    impact: |
+      Without a pinned genesis the node auto-detects by scanning from block 0 of the
+      settlement chain (~14M blocks); synced_block stays 0 and sync never catches up.
+      NOTE: genesis is NOT "0" — it is the AddressManager DEPLOYMENT block for the
+      specific deployment.
     fix: |
-      Add to .env file:
-      GENLAYERNODE_CONSENSUS_GENESIS=0
-
-      For testnet, genesis is typically 0.
-    severity: medium
+      Pin the deployment's AddressManager deploy block in config.yaml:
+        consensus:
+          genesis: <deploy-block>   # e.g. pre-clarke = 13943913
+      Restart. With genesis pinned the node catches up to head in seconds.
+    severity: high
 
   - id: strip-components-extraction
     description: "Extracting tarball without --strip-components"
@@ -682,6 +740,72 @@ edges:
       PREVENTION: When deploying as docker, skip the DB symlink creation step.
       The database should live directly in the version directory for docker deploys.
     severity: high
+
+  - id: docker-webdriver-host-ssrf-address-forbidden
+    description: "Docker deploy (v0.6+) crash-loops: genvm web module returns ADDRESS_FORBIDDEN reaching the webdriver"
+    detect: |
+      docker logs genlayer-node 2>&1 | grep -i "ADDRESS_FORBIDDEN"
+      # Boot GenVM self-test renders a page via web module -> webdriver and fails:
+      #   causes:["ADDRESS_FORBIDDEN"], url: http://webdriver-container:4444/render?...
+      #   -> "test genvm: error running contract" -> "Failed to execute root command" -> exit -> restart loop
+      grep webdriver_host genvm-module-web-docker.yaml   # default: http://webdriver-container:4444 (a HOSTNAME)
+    impact: |
+      genvm's web-module SSRF guard is a DNS-resolver hook that filters HOSTNAMES at
+      resolution time (private/loopback ranges are rejected). The shipped
+      genvm-module-web-docker.yaml points webdriver_host at the HOSTNAME 'webdriver-container',
+      which resolves to a private docker IP -> blocked. Host/binary deploys are unaffected
+      (they use the 127.0.0.1 LITERAL; a literal IP never enters DNS resolution, so the filter
+      never runs). `always_allow_hosts` does NOT help (it only governs ports, not the resolver).
+    fix: |
+      Apply ONLY when the symptom is actually present (see detect) — do NOT pre-apply, and do
+      NOT gate on a genvm version. A node/genvm release may already allow the configured
+      webdriver_host, in which case ADDRESS_FORBIDDEN never appears and there is nothing to do.
+      When you DO see it: point webdriver_host at the webdriver's CURRENT literal IP (a literal
+      never enters DNS resolution, so the resolver filter never runs):
+        IP=$(docker inspect genlayer-node-webdriver --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+        sed -i "s|^webdriver_host: .*|webdriver_host: http://$IP:4444|" genvm-module-web-docker.yaml
+        docker restart genlayer-node
+      That IP can change on `compose down`/`up` — re-check after recreation. Do NOT hardcode a
+      compose subnet / static IP in the node's SHIPPED docker assets (trades one env-dependent
+      failure for another).
+    severity: critical
+    when_to_check: |
+      REACTIVE — only when the node crash-loops AND its logs show ADDRESS_FORBIDDEN. No version
+      precondition; if the symptom is absent, do nothing.
+
+  - id: doctor-command-syntax-v06
+    description: "`doctor check` and an unexported .env break the v0.6 doctor command"
+    detect: |
+      ./bin/genlayernode doctor --help
+      # v0.6: subcommand is just `doctor` (NO `check`); flags include -N and --expected-consensus-address
+    impact: |
+      `doctor check` errors ('accepts 0 arg(s), received 1'). And plain `source .env` does NOT
+      export vars, so doctor reports LLM keys as 'not set' even when present. For custom/pre-release
+      deployments the built-in network registry won't recognize the consensus address.
+    fix: |
+      cd /opt/genlayer-node
+      set -a; source .env; set +a                          # EXPORT env so doctor sees LLM keys
+      ./bin/genlayernode doctor --expected-consensus-address 0x<AddressManager>
+      # -N asimov|bradbury only covers built-in networks; use --expected-consensus-address for
+      # custom/pre-release deployments (e.g. pre-clarke).
+    severity: medium
+
+  - id: full-node-mode-vs-validator
+    description: "Full node (mode: full) needs NO wallet/operator/keystore/staking"
+    detect: |
+      grep -E "^\s*mode:" configs/node/config.yaml   # 'full' or 'validator'
+      docker logs genlayer-node 2>&1 | grep -i "full node mode detected"
+    impact: |
+      A full node syncs and serves RPC but does NOT participate in consensus, so it needs no
+      validator wallet, operator address, keystore, staking, or gas funding (logs: 'full node
+      mode detected, skipping validator setup'). It DOES still need an LLM provider + genvm
+      config (for gen_call). Running the staking wizard / importing an operator keystore for a
+      full node is wasted effort.
+    fix: |
+      For a full node: set node.mode: "full", leave validatorWalletAddress/operatorAddress empty,
+      and skip the staking wizard + keystore import entirely. Still configure RPC/WS, the
+      consensus address + genesis, and one LLM provider key.
+    severity: low
 
   # ============================================================================
   # UPDATE PROCEDURE
