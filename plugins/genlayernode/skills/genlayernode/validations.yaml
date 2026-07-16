@@ -202,14 +202,14 @@ validations:
   - id: rpc-url-reachable
     type: command
     command: |
-      sh -c 'set -a; [ -f /opt/genlayer-node/.env ] && . /opt/genlayer-node/.env || . ./.env; curl -sf -m 30 -X POST "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" -H "Content-Type: application/json" -d '\''{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'\'' | grep -q result'
+      sh -c '. /opt/genlayer-node/.env 2>/dev/null; [ -n "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" ] || . ./.env 2>/dev/null; [ -n "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" ] || exit 1; curl -sf -m 30 -X POST "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" -H "Content-Type: application/json" -d '\''{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'\'' | grep -q "\"result\":\"0x"'
     expect: "exit 0"
     message: "Cannot reach the configured rollup RPC endpoint. Check network connectivity."
 
   - id: configured-rpc-chainid-reachable
     type: command
     command: |
-      sh -c 'set -a; [ -f /opt/genlayer-node/.env ] && . /opt/genlayer-node/.env || . ./.env; curl -sf -m 10 -X POST "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" -H "Content-Type: application/json" -d '\''{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'\'' | grep -q result'
+      sh -c '. /opt/genlayer-node/.env 2>/dev/null; [ -n "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" ] || . ./.env 2>/dev/null; [ -n "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" ] || exit 1; curl -sf -m 10 -X POST "$GENLAYERNODE_ROLLUP_GENLAYERCHAINRPCURL" -H "Content-Type: application/json" -d '\''{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'\'' | grep -q "\"result\":\"0x"'
     expect: "exit 0"
     message: "Configured rollup RPC did not answer eth_chainId. This may be a shared RPC outage; verify before changing node config."
 
