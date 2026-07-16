@@ -227,7 +227,7 @@ edges:
       The AddressManager address AND genesis block are PER-DEPLOYMENT — there is no
       single correct value. Get them from the deployment you are joining:
         - asimov / bradbury: from official docs or a working peer's config
-        - custom/pre-release (e.g. pre-clarke): from the release's shipped config.yaml
+        - custom / pre-release deployments: from the release's shipped config.yaml
       v0.6+ sets them in configs/node/config.yaml under `consensus:`
         consensus:
           consensusaddress: "0x...."   # AddressManager for THIS deployment
@@ -700,7 +700,7 @@ edges:
     fix: |
       Pin the deployment's AddressManager deploy block in config.yaml:
         consensus:
-          genesis: <deploy-block>   # e.g. pre-clarke = 13943913
+          genesis: <deploy-block>   # the AddressManager deployment block for THIS deployment
       Restart. With genesis pinned the node catches up to head in seconds.
     severity: high
 
@@ -787,7 +787,7 @@ edges:
       set -a; source .env; set +a                          # EXPORT env so doctor sees LLM keys
       ./bin/genlayernode doctor --expected-consensus-address 0x<AddressManager>
       # -N asimov|bradbury only covers built-in networks; use --expected-consensus-address for
-      # custom/pre-release deployments (e.g. pre-clarke).
+      # custom / pre-release deployments.
     severity: medium
 
   - id: full-node-mode-vs-validator
