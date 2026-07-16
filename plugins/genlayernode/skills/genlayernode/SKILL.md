@@ -679,8 +679,8 @@ Run the doctor command to verify all configuration is correct:
 
 ```bash
 # v0.6+: the subcommand is `doctor` (NOT `doctor check`). Use `set -a` so .env LLM keys are
-# EXPORTED to the child process, and --expected-consensus-address for custom/pre-release
-# deployments (e.g. pre-clarke); -N asimov|bradbury only covers the built-in networks.
+# EXPORTED to the child process, and --expected-consensus-address for custom / pre-release
+# deployments; -N asimov|bradbury only covers the built-in networks.
 cd /opt/genlayer-node
 set -a; source .env; set +a
 ./bin/genlayernode doctor --expected-consensus-address 0x<AddressManager>
