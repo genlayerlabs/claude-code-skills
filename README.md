@@ -12,6 +12,7 @@ A plugin marketplace providing skills for GenLayer development and operations. W
 
 # Install a plugin
 /plugin install genlayer-dev@genlayerlabs
+/plugin install genlayer-docs@genlayerlabs
 /plugin install genlayernode@genlayerlabs
 ```
 
@@ -28,6 +29,7 @@ After adding the marketplace, enable individual plugins from Codex's plugin menu
 | Plugin | Description |
 |--------|-------------|
 | `genlayer-dev` | Development skills for intelligent contracts — pinned GenVM runner versions, linting, direct mode tests, and integration tests. |
+| `genlayer-docs` | Search GenLayer protocol and SDK documentation through the hosted Docs MCP service. |
 | `genlayernode` | Interactive wizard to set up a GenLayer validator node on Linux. |
 
 ## Usage
@@ -43,6 +45,12 @@ After installing a plugin, invoke its skills:
 | `genvm-lint` | Validate contracts with the GenVM linter |
 | `direct-tests` | Write and run fast in-memory direct mode tests |
 | `integration-tests` | Write and run integration tests against GenLayer environments |
+
+### genlayer-docs
+
+Install or enable `genlayer-docs` when you want hosted documentation search.
+It is separate from `genlayer-dev`, so a documentation service outage cannot
+prevent the local development skills from loading.
 
 ### genlayernode
 

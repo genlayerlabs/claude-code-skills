@@ -1,0 +1,38 @@
+{
+  "name": "genlayer-docs",
+  "version": "1.0.0",
+  "description": "Search GenLayer and GenLayer SDK documentation through the hosted Docs MCP service.",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "homepage": "https://docs.genlayer.com/",
+  "repository": "https://github.com/genlayerlabs/skills",
+  "license": "MIT",
+  "keywords": [
+    "genlayer",
+    "documentation",
+    "mcp",
+    "sdk"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "GenLayer Docs",
+    "shortDescription": "Search GenLayer protocol and SDK docs",
+    "longDescription": "Search the current GenLayer protocol, intelligent contract, validator, CLI, and SDK documentation through the hosted GenLayer Docs MCP service.",
+    "developerName": "GenLayer Labs",
+    "category": "Engineering",
+    "capabilities": [
+      "Read",
+      "Interactive"
+    ],
+    "websiteURL": "https://docs.genlayer.com/",
+    "defaultPrompt": [
+      "Search GenLayer docs for intelligent contract guidance.",
+      "Find the current GenLayer SDK API documentation.",
+      "Look up GenLayer validator setup instructions."
+    ],
+    "brandColor": "#00E88A",
+    "screenshots": []
+  }
+}
