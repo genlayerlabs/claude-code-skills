@@ -27,6 +27,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Engineering"
+    },
+    {
+      "name": "genlayer-docs",
+      "source": {
+        "source": "local",
+        "path": "./plugins/genlayer-docs"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
     }
   ]
 }

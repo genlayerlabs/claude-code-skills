@@ -1,0 +1,11 @@
+{
+  "name": "genlayer-docs",
+  "version": "1.0.0",
+  "description": "Search GenLayer and GenLayer SDK documentation through the hosted Docs MCP service.",
+  "mcpServers": {
+    "genlayer-docs": {
+      "type": "sse",
+      "url": "https://docs-mcp.genlayer.com/sse"
+    }
+  }
+}

@@ -13,6 +13,11 @@
       "name": "genlayer-dev",
       "source": "./plugins/genlayer-dev",
       "description": "Development skills for GenLayer intelligent contracts — pinned GenVM runner versions, linting, direct mode tests, and integration tests."
+    },
+    {
+      "name": "genlayer-docs",
+      "source": "./plugins/genlayer-docs",
+      "description": "Search GenLayer protocol and SDK documentation through the hosted Docs MCP service."
     }
   ]
 }
