@@ -800,11 +800,12 @@ patterns:
   - id: triage-validator-health
     description: |
       Diagnose validator downtime before changing configuration or requesting unban.
-      Covers shared RPC outages, temporary validator bans, and LLM provider capability errors.
+      Covers shared RPC outages, temporary validator bans, LLM provider capability errors,
+      and hosted model-catalog drift such as Morpheus 503 model_unavailable responses.
     commands:
       - "cd /opt/genlayer-node && source .env && ./bin/genlayernode doctor"
       - "curl -s http://localhost:9153/health | jq"
-      - "journalctl -u genlayer-node --since '1 hour ago' --no-pager | grep -Ei 'temporary ban|validator is banned|NO_PROVIDER_FOR_PROMPT|Gateway Timeout|504|get chain ID'"
+      - "journalctl -u genlayer-node --since '1 hour ago' --no-pager | grep -Ei 'temporary ban|validator is banned|NO_PROVIDER_FOR_PROMPT|model_unavailable|DEGRADED|Gateway Timeout|504|get chain ID'"
     decision_tree:
       - symptom: "dependencies: get chain ID: 504 Gateway Timeout"
         action: "Verify configured RPC/WebSocket and check for shared network incident before rotating endpoints."
@@ -812,6 +813,8 @@ patterns:
         action: "Fix root cause, run doctor, then request unban with validator wallet address and sanitized health output."
       - symptom: "NO_PROVIDER_FOR_PROMPT"
         action: "Check enabled LLM backend, API key, model capability support, and restart affected GenVM LLM module."
+      - symptom: "Morpheus returns model_unavailable or HTTP 503 for configured models"
+        action: "Treat as hosted model-catalog drift: keep secrets local, identify working models, disable unavailable Morpheus model entries or switch provider, then rerun doctor before restart."
     safe_to_share:
       - "validator wallet address"
       - "network"
@@ -844,6 +847,11 @@ anti_patterns:
     description: "Not setting any LLM API key"
     why_bad: "Node cannot execute intelligent contracts."
     fix: "Set at least one LLM provider API key."
+
+  - id: assume-hosted-llm-catalog-static
+    description: "Assuming the hosted LLM provider catalog exactly matches release YAML forever"
+    why_bad: "A provider can remove or restrict hosted models after a node release, causing DEGRADED health or repeated model_unavailable errors even with a valid key."
+    fix: "Check LLM module logs and provider model availability; disable unavailable model entries or use another supported provider before restarting."
 
   - id: plaintext-password-in-history
     description: "Typing password directly in command line"

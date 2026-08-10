@@ -129,9 +129,15 @@ validations:
 
   - id: llm-key-configured
     type: command
-    command: "[ -n \"${HEURISTKEY:-}\" ] || [ -n \"${COMPUT3KEY:-}\" ] || [ -n \"${IOINTELLIGENCEKEY:-}\" ] || [ -n \"${OPENROUTERKEY:-}\" ]"
+    command: "[ -n \"${HEURISTKEY:-}\" ] || [ -n \"${COMPUT3KEY:-}\" ] || [ -n \"${IOINTELLIGENCEKEY:-}\" ] || [ -n \"${OPENROUTERKEY:-}\" ] || [ -n \"${MORPHEUS_API_KEY:-}\" ]"
     expect: "exit 0"
-    message: "No LLM API key configured. Set HEURISTKEY, COMPUT3KEY, IOINTELLIGENCEKEY, or OPENROUTERKEY"
+    message: "No LLM API key configured. Set HEURISTKEY, COMPUT3KEY, IOINTELLIGENCEKEY, OPENROUTERKEY, or MORPHEUS_API_KEY"
+
+  - id: llm-logs-no-model-unavailable
+    type: command
+    command: "! journalctl -u genlayer-node --since '1 hour ago' --no-pager 2>/dev/null | grep -Eiq 'model_unavailable|not available on the hosted gateway|NO_PROVIDER_FOR_PROMPT|DEGRADED'"
+    expect: "exit 0"
+    message: "Recent logs show LLM provider/model availability errors. Check sharp-edges.yaml -> morpheus-hosted-model-catalog-drift and provider capability configuration."
 
   - id: webdriver-running
     type: command
@@ -278,6 +284,7 @@ on_warn:
   - python3-pip-installed
   - python3-venv-installed
   - systemd-has-alloy-restart
+  - llm-logs-no-model-unavailable
 
 # Post-update validations (run after upgrade)
 post_update:
