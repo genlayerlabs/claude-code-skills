@@ -471,6 +471,44 @@ edges:
 
       Always verify your LLM provider is enabled in GenVM config!
 
+  - id: morpheus-hosted-model-catalog-drift
+    description: "Morpheus API key is valid but release YAML references hosted models that are no longer available"
+    detect: |
+      # Look for hosted gateway catalog drift or model availability failures.
+      journalctl -u genlayer-node --since "1 hour ago" --no-pager | \
+        grep -Ei "morpheus|model_unavailable|not available on the hosted gateway|HTTP 503|DEGRADED|NO_PROVIDER_FOR_PROMPT"
+
+      # Confirm Morpheus is configured without printing the key value.
+      grep -E '^MORPHEUS_API_KEY=.+' /opt/genlayer-node/.env >/dev/null 2>&1 && \
+        echo "MORPHEUS_API_KEY is set (value hidden)"
+
+      # Check which Morpheus model entries are present/enabled locally.
+      grep -A 80 '^  morpheus:' /opt/genlayer-node/third_party/genvm/config/genvm-module-llm.yaml | \
+        grep -Ei 'enabled:|model|name:'
+    impact: |
+      A fresh or upgraded node can start in DEGRADED mode or repeatedly fail LLM
+      calls even though the local .env contains a valid Morpheus key and the
+      release LLM config was copied correctly. The hosted Morpheus gateway model
+      catalog is not guaranteed to remain identical to the model entries shipped
+      in an older GenVM release YAML.
+    fix: |
+      1. Do not paste MORPHEUS_API_KEY or full .env contents into support chats.
+      2. Check current Morpheus hosted model availability from the provider dashboard,
+         API docs, or a local API smoke test run by the operator.
+      3. Disable or remove Morpheus model entries that return model_unavailable / 503,
+         or switch to another supported provider such as Heurist, Comput3, io.net,
+         OpenRouter, Anthropic, or Google.
+      4. Re-run `cd /opt/genlayer-node && source .env && ./bin/genlayernode doctor`.
+      5. Restart the affected GenVM LLM module or the node only after doctor passes.
+      6. If this affects multiple validators, report sanitized details upstream:
+         node version, GenVM version, provider name, failing model names, and redacted
+         error lines. Never include API keys.
+    severity: high
+    when_to_check: |
+      1. During new validator setup when Morpheus is selected.
+      2. During upgrades before switching symlinks to a new version.
+      3. Whenever health shows DEGRADED, NO_PROVIDER_FOR_PROMPT, or model_unavailable.
+
   # ============================================================================
   # RUNTIME
   # ============================================================================
