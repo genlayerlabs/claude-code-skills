@@ -121,7 +121,7 @@ This skill guides you through the complete validator node installation process. 
 7. **Configure LLM provider** - Set up API keys for intelligent contract execution
 8. **Start the node** - Launch as systemd service, Docker Compose, or manual process
 9. **Verify installation** - Check health and sync status
-10. **Optional: Enable monitoring** - Set up telemetry push to central monitoring
+10. **Enable monitoring (required on testnet)** - Set up telemetry push to central monitoring
 
 **Total time estimate**: 20-45 minutes depending on your experience level and setup method.
 
@@ -823,7 +823,21 @@ journalctl -u genlayer-node -f --no-hostname
 docker logs -f genlayer-node
 ```
 
-### 10. Monitoring (Optional)
+### 10. Link Your Account in the Portal
+
+Link your operator wallet to your portal account so your validators appear under your profile. You can do this **as soon as you have the operator wallet address** — no need to wait for the node to finish syncing.
+
+1. Open **https://portal.genlayer.foundation** and sign in.
+2. Go to **Profile → Edit → Validator Settings → Link Operator Wallet**.
+3. Paste your **operator wallet address** (the one used when creating the validator) and save.
+4. While in **Profile → Edit**, also set your **profile image** and **banner** — these are required for your validator to display properly in the portal.
+
+The portal links by operator address and **automatically attaches every synced validator wallet** it finds for that operator across **both networks (Asimov and Bradbury)**.
+
+**Tip:** Use the **same operator wallet on both networks** if you can — then a single link covers all your validators.
+
+### 11. Monitoring (Required on Testnet)
+- **Mandatory for every validator during testnet** — not optional
 - Enable telemetry push to GenLayer Foundation's Grafana Cloud using Alloy
 - Requires monitoring credentials (request from Foundation Discord `#testnet-asimov`)
 - Collects Prometheus metrics and node logs
@@ -901,7 +915,8 @@ When you use the word "latest", the skill will automatically fetch and install t
 | 8 | Run Doctor Check | Verify all configuration |
 | 9 | Deployment Method | Systemd (recommended), Docker, or manual |
 | 10 | Verify Node Running | Health check, sync status |
-| 11 | Monitoring (Optional) | Enable telemetry push |
+| 11 | Link Account in Portal | Link operator wallet at portal.genlayer.foundation |
+| 12 | Monitoring (Required on testnet) | Enable telemetry push |
 
 ## Key Decision Points
 
@@ -1042,7 +1057,8 @@ These can be presented as multiple choice:
 - LLM provider selection (Heurist, Comput3, io.net, etc.) - select provider, NOT the key
 - Operator key source (import, copy, generate)
 - Deployment method (systemd, docker, manual)
-- Enable monitoring? (yes/no)
+
+Note: monitoring is **required on testnet**, so it is not a yes/no choice — set it up for every validator.
 
 ## Procedure Documents
 

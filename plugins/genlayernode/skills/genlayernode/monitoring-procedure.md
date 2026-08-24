@@ -1,5 +1,10 @@
 # GenLayer Validator Monitoring Setup Procedure
 
+> **REQUIRED during testnet.** Monitoring is **mandatory for every validator** on
+> testnet — it is not optional. The Foundation requires each validator to push
+> metrics and logs so node health can be tracked. Complete this procedure as part
+> of every validator setup.
+
 ## Goal
 Enable centralized monitoring by pushing metrics and logs to GenLayer Foundation's Grafana Cloud using Alloy.
 
@@ -84,12 +89,12 @@ CENTRAL_MONITORING_URL=https://prometheus-prod-66-prod-us-east-3.grafana.net/api
 CENTRAL_LOKI_URL=https://logs-prod-042.grafana.net/loki/api/v1/push
 
 # Prometheus credentials (for metrics)
-CENTRAL_MONITORING_USERNAME=<Prometheus instance ID>
-CENTRAL_MONITORING_PASSWORD=<API key - starts with glc_>
+CENTRAL_MONITORING_USERNAME=<Prometheus instance ID - see Foundation onboarding doc>
+CENTRAL_MONITORING_PASSWORD=<auth token from Telegram - starts with glc_>
 
 # Loki credentials (for logs)
-CENTRAL_LOKI_USERNAME=<Loki instance ID>
-CENTRAL_LOKI_PASSWORD=<API key - starts with glc_>
+CENTRAL_LOKI_USERNAME=<Loki instance ID - see Foundation onboarding doc>
+CENTRAL_LOKI_PASSWORD=<same auth token as above>
 
 # Node identification (set these yourself)
 NODE_ID=0xYourValidatorWalletAddress
@@ -100,8 +105,9 @@ VALIDATOR_NAME=your-validator-name
 - `NODE_ID` — Use your validator wallet address (e.g., `0x1451c990fa6Fa23Bc2773266Fa022cBb369cE165`)
 - `VALIDATOR_NAME` — A short identifier for your validator (no spaces, e.g., `edgars-asimov`)
 - URLs should NOT have trailing slashes
-- `CENTRAL_MONITORING_USERNAME` and `CENTRAL_LOKI_USERNAME` are typically **different** numeric IDs
-- The password (API key) **may** be the same for both, but verify with your Foundation credentials
+- `CENTRAL_MONITORING_USERNAME` and `CENTRAL_LOKI_USERNAME` are **different** numeric IDs — find both in the onboarding doc the GenLayer Foundation provided
+- The password is the **same** for both `CENTRAL_MONITORING_PASSWORD` and `CENTRAL_LOKI_PASSWORD` — it's a single auth token (starts with `glc_`)
+- This auth token is **not** in this skill or any config file. The Foundation provides it **privately via the Telegram group** — request it there and paste it into both password fields
 
 **Optional settings (defaults are usually fine):**
 ```bash
@@ -294,10 +300,10 @@ CENTRAL_MONITORING_URL=https://prometheus-prod-66.../api/prom/push/
 |----------|----------|-------------|---------|
 | `CENTRAL_MONITORING_URL` | Yes | Prometheus remote write URL | `https://prometheus-prod-66-...grafana.net/api/prom/push` |
 | `CENTRAL_LOKI_URL` | Yes | Loki log push URL | `https://logs-prod-042.grafana.net/loki/api/v1/push` |
-| `CENTRAL_MONITORING_USERNAME` | Yes | Prometheus instance ID (numeric) | `1234567` |
-| `CENTRAL_MONITORING_PASSWORD` | Yes | Prometheus API key | `glc_xxxxx...` |
-| `CENTRAL_LOKI_USERNAME` | Yes | Loki instance ID (numeric, **different** from Prometheus) | `9876543` |
-| `CENTRAL_LOKI_PASSWORD` | Yes | Loki API key | `glc_xxxxx...` |
+| `CENTRAL_MONITORING_USERNAME` | Yes | Prometheus instance ID (numeric) — see Foundation onboarding doc | `<from onboarding doc>` |
+| `CENTRAL_MONITORING_PASSWORD` | Yes | Auth token (from Telegram, **same** as Loki) | `glc_xxxxx...` |
+| `CENTRAL_LOKI_USERNAME` | Yes | Loki instance ID (numeric, **different** from Prometheus) — see onboarding doc | `<from onboarding doc>` |
+| `CENTRAL_LOKI_PASSWORD` | Yes | Auth token (**same** as Prometheus) | `glc_xxxxx...` |
 | `NODE_ID` | Yes | Validator wallet address | `0x1451c990...` |
 | `VALIDATOR_NAME` | Yes | Short validator name (no spaces) | `edgars-asimov` |
 | `NODE_METRICS_ENDPOINT` | No | Node metrics address | `host.docker.internal:9153` |

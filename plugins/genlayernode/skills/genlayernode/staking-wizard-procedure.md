@@ -198,6 +198,8 @@ into your validator node software.
 
 **CRITICAL**: Save the exported keystore file and remember the export password. You need both to import the operator key on the validator server.
 
+**Tip — link the portal early**: Once you have the operator wallet address (shown above), you can already link your account in the portal at any time — no need to wait for the node to be running. At https://portal.genlayer.foundation go to **Profile → Edit → Validator Settings → Link Operator Wallet** and enter this operator address. While in **Profile → Edit**, also set your **profile image** and **banner** (required). The portal auto-attaches all your synced validators across Asimov and Bradbury. Use the same operator wallet on both networks if possible.
+
 ### Step 5: Stake Amount
 
 **What happens**: User specifies how much GEN to stake.
