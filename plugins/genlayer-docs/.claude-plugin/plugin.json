@@ -1,6 +1,6 @@
 {
   "name": "genlayer-docs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Search GenLayer and GenLayer SDK documentation through the hosted Docs MCP service.",
   "mcpServers": {
     "genlayer-docs": {

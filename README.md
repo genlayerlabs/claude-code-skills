@@ -50,7 +50,9 @@ After installing a plugin, invoke its skills:
 
 Install or enable `genlayer-docs` when you want hosted documentation search.
 It is separate from `genlayer-dev`, so a documentation service outage cannot
-prevent the local development skills from loading.
+prevent the local development skills from loading. Codex connects through the
+stateless Streamable HTTP endpoint at `/mcp`; the Claude plugin retains the
+legacy SSE endpoint for compatibility.
 
 ### genlayernode
 
